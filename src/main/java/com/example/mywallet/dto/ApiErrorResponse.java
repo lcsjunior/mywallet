@@ -1,12 +1,14 @@
 package com.example.mywallet.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 public record ApiErrorResponse(
-    String error,
+    String code,
     String message,
     int status,
     String path,
-    Instant timestamp
+    Instant timestamp,
+    List<FieldErrorDetail> details
 ) {
 }

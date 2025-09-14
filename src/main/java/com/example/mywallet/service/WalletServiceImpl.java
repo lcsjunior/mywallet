@@ -4,6 +4,7 @@ import com.example.mywallet.dto.CreateWalletRequest;
 import com.example.mywallet.dto.CreateWalletResponse;
 import com.example.mywallet.dto.GetWalletResponse;
 import com.example.mywallet.exception.NotFoundException;
+import com.example.mywallet.helper.LogHelper;
 import com.example.mywallet.mapper.CreateWalletMapper;
 import com.example.mywallet.mapper.GetWalletMapper;
 import com.example.mywallet.model.Wallet;
@@ -41,7 +42,7 @@ public class WalletServiceImpl implements WalletService {
   public GetWalletResponse getWallet(UUID walletId) {
     var wallet = walletRepository.findById(walletId)
         .orElseThrow(() -> {
-          log.warn("Wallet not found for id={}", walletId);
+          LogHelper.warn(log, "Wallet not found for id=%s", walletId);
           return new NotFoundException(WALLET_NOT_FOUND);
         });
     return GetWalletMapper.toResponse(wallet);

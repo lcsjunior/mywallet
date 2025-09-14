@@ -1,10 +1,25 @@
 package com.example.mywallet.exception;
 
-public class ErrorMessages {
+public enum ErrorMessages {
 
-  private ErrorMessages() {
+  GENERIC_ERROR("ERR-0001", "An unexpected error occurred"),
+  VALIDATION_ERROR("ERR-0002", "Validation error"),
+  WALLET_NOT_FOUND("ERR-1001", "Wallet not found");
+
+  private final String code;
+
+  private final String message;
+
+  ErrorMessages(String code, String message) {
+    this.code = code;
+    this.message = message;
   }
 
-  public static final String GENERIC_ERROR = "An unexpected error occurred";
-  public static final String WALLET_NOT_FOUND = "Wallet not found";
+  public String getCode() {
+    return code;
+  }
+
+  public String formatMessage(Object... args) {
+    return String.format(message, args);
+  }
 }

@@ -1,12 +1,30 @@
 #!/bin/bash
 
-SERVER_PORT=8080
-DEBUG_PORT=5005
+HTTP_PORT_START=8080
+DEBUG_PORT_START=5005
+PROFILE="dev"
 
-echo "Starting Spring Boot on port $SERVER_PORT with debug on port $DEBUG_PORT..."
+find_free_port() {
+  local port="$1"
+  while lsof -i:"$port" -t >/dev/null; do
+    port=$((port + 1))
+  done
+  echo "$port"
+}
 
-./mvnw spring-boot:run \
+SERVER_PORT=$(find_free_port "$HTTP_PORT_START")
+
+DEBUG_PORT=$(find_free_port "$DEBUG_PORT_START")
+
+echo "=================================================="
+echo "Starting Spring Boot application"
+echo "HTTP port : $SERVER_PORT"
+echo "Debug port: $DEBUG_PORT"
+echo "Profile   : $PROFILE"
+echo "=================================================="
+
+./mvnw clean spring-boot:run \
   -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT" \
   -Dspring-boot.run.arguments="--server.port=$SERVER_PORT" \
-  -Dspring-boot.run.arguments="--spring.profiles.active=dev"
+  -Dspring-boot.run.arguments="--spring.profiles.active=$PROFILE"
 
