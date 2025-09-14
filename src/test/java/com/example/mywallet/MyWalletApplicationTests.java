@@ -7,7 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 class MyWalletApplicationTests {
 
 	@Test
-	void contextLoads() {
-	}
+  void contextLoads() {
+    // NOSONAR
+  }
 
 }
