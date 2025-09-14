@@ -2,7 +2,7 @@
 
 HTTP_PORT_START=8080
 DEBUG_PORT_START=5005
-PROFILE="dev"
+PROFILE=${1:-dev}
 
 find_free_port() {
   local port="$1"
