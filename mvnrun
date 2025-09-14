@@ -7,5 +7,6 @@ echo "Starting Spring Boot on port $SERVER_PORT with debug on port $DEBUG_PORT..
 
 ./mvnw spring-boot:run \
   -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT" \
-  -Dspring-boot.run.arguments="--server.port=$SERVER_PORT"
+  -Dspring-boot.run.arguments="--server.port=$SERVER_PORT" \
+  -Dspring-boot.run.arguments="--spring.profiles.active=dev"
 
