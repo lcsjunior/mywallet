@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 import static com.example.mywallet.exception.ErrorMessages.WALLET_NOT_FOUND;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -43,7 +42,7 @@ public class WalletServiceImpl implements WalletService {
     var wallet = walletRepository.findById(walletId)
         .orElseThrow(() -> {
           log.warn("Wallet not found for id={}", walletId);
-          return new ApiException(NOT_FOUND, WALLET_NOT_FOUND);
+          return new ApiException(WALLET_NOT_FOUND);
         });
     return GetWalletMapper.toResponse(wallet);
   }
