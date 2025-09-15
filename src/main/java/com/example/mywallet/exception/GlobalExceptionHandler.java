@@ -12,7 +12,6 @@ import java.time.Instant;
 
 import static com.example.mywallet.exception.ErrorMessages.GENERIC_ERROR;
 import static com.example.mywallet.exception.ErrorMessages.VALIDATION_ERROR;
-import static org.springframework.http.HttpStatus.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -22,7 +21,7 @@ public class GlobalExceptionHandler {
       ApiException ex,
       HttpServletRequest request) {
 
-    ApiErrorResponse response = new ApiErrorResponse(
+    var response = new ApiErrorResponse(
         ex.getError().getCode(),
         ex.getMessage(),
         ex.getStatus().value(),
@@ -42,15 +41,15 @@ public class GlobalExceptionHandler {
         .stream()
         .map(err -> new FieldErrorDetail(err.getField(), err.getDefaultMessage()))
         .toList();
-    ApiErrorResponse response = new ApiErrorResponse(
+    var response = new ApiErrorResponse(
         VALIDATION_ERROR.getCode(),
         VALIDATION_ERROR.formatMessage(),
-        BAD_REQUEST.value(),
+        VALIDATION_ERROR.getStatus().value(),
         request.getRequestURI(),
         Instant.now(),
         details
     );
-    return ResponseEntity.status(BAD_REQUEST).body(response);
+    return ResponseEntity.status(VALIDATION_ERROR.getStatus()).body(response);
   }
 
   @ExceptionHandler(RuntimeException.class)
@@ -58,14 +57,14 @@ public class GlobalExceptionHandler {
       Exception ex,
       HttpServletRequest request) {
 
-    ApiErrorResponse response = new ApiErrorResponse(
+    var response = new ApiErrorResponse(
         GENERIC_ERROR.getCode(),
         GENERIC_ERROR.formatMessage(),
-        NOT_FOUND.value(),
+        GENERIC_ERROR.getStatus().value(),
         request.getRequestURI(),
         Instant.now(),
         null
     );
-    return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(response);
+    return ResponseEntity.status(GENERIC_ERROR.getStatus()).body(response);
   }
 }
