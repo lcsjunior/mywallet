@@ -17,20 +17,20 @@ import static org.springframework.http.HttpStatus.*;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  @ExceptionHandler(NotFoundException.class)
+  @ExceptionHandler(ApiException.class)
   public ResponseEntity<ApiErrorResponse> handleNotFound(
-      NotFoundException ex,
+      ApiException ex,
       HttpServletRequest request) {
 
     ApiErrorResponse response = new ApiErrorResponse(
         ex.getError().getCode(),
         ex.getMessage(),
-        NOT_FOUND.value(),
+        ex.getStatus().value(),
         request.getRequestURI(),
         Instant.now(),
         null
     );
-    return ResponseEntity.status(NOT_FOUND).body(response);
+    return ResponseEntity.status(ex.getStatus()).body(response);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
