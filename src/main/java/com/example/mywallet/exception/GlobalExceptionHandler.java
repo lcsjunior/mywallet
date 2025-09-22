@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
       HttpServletRequest request) {
 
     var response = new ApiErrorResponse(
-        ex.getError().getCode(),
+        ex.getError().name(),
         ex.getMessage(),
         ex.getStatus().value(),
         request.getRequestURI(),
@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
         .map(err -> new FieldErrorDetail(err.getField(), err.getDefaultMessage()))
         .toList();
     var response = new ApiErrorResponse(
-        VALIDATION_ERROR.getCode(),
+        VALIDATION_ERROR.name(),
         VALIDATION_ERROR.formatMessage(),
         VALIDATION_ERROR.getStatus().value(),
         request.getRequestURI(),
@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
       HttpServletRequest request) {
 
     var response = new ApiErrorResponse(
-        GENERIC_ERROR.getCode(),
+        GENERIC_ERROR.name(),
         GENERIC_ERROR.formatMessage(),
         GENERIC_ERROR.getStatus().value(),
         request.getRequestURI(),

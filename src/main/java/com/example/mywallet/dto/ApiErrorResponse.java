@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 public record ApiErrorResponse(
-    String code,
+    String name,
     String message,
     int status,
     String path,

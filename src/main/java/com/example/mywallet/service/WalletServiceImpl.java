@@ -2,7 +2,9 @@ package com.example.mywallet.service;
 
 import com.example.mywallet.dto.CreateWalletRequest;
 import com.example.mywallet.dto.CreateWalletResponse;
+import com.example.mywallet.dto.DepositRequest;
 import com.example.mywallet.dto.GetWalletResponse;
+import com.example.mywallet.dto.WithdrawRequest;
 import com.example.mywallet.exception.ApiException;
 import com.example.mywallet.mapper.CreateWalletMapper;
 import com.example.mywallet.mapper.GetWalletMapper;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+import static com.example.mywallet.exception.ErrorMessages.INSUFFICIENT_FUNDS;
 import static com.example.mywallet.exception.ErrorMessages.WALLET_NOT_FOUND;
 
 @Service
@@ -39,11 +42,36 @@ public class WalletServiceImpl implements WalletService {
 
   @Override
   public GetWalletResponse getWallet(UUID walletId) {
-    var wallet = walletRepository.findById(walletId)
+    var wallet = retrieveWallet(walletId);
+    return GetWalletMapper.toResponse(wallet);
+  }
+
+  @Override
+  public void deposit(UUID walletId, DepositRequest depositRequest) {
+    var wallet = retrieveWallet(walletId);
+    var amount = depositRequest.amount();
+    var currentBalance = wallet.getBalance();
+    wallet.setBalance(currentBalance.add(amount));
+    walletRepository.save(wallet);
+  }
+
+  @Override
+  public void withdraw(UUID walletId, WithdrawRequest withdrawRequest) {
+    var wallet = retrieveWallet(walletId);
+    var amount = withdrawRequest.amount();
+    var currentBalance = wallet.getBalance();
+    if (currentBalance.compareTo(amount) < 0) {
+      throw new ApiException(INSUFFICIENT_FUNDS);
+    }
+    wallet.setBalance(currentBalance.subtract(amount));
+    walletRepository.save(wallet);
+  }
+
+  private Wallet retrieveWallet(UUID walletId) {
+    return walletRepository.findById(walletId)
         .orElseThrow(() -> {
           log.warn("Wallet not found for id={}", walletId);
           return new ApiException(WALLET_NOT_FOUND);
         });
-    return GetWalletMapper.toResponse(wallet);
   }
 }
