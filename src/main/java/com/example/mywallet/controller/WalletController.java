@@ -19,7 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/wallets")
+@RequestMapping("/v1/wallets")
 public class WalletController {
 
   private final WalletService walletService;

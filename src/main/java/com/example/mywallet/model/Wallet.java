@@ -40,10 +40,6 @@ public class Wallet {
     return walletId;
   }
 
-  public UUID getUserId() {
-    return userId;
-  }
-
   public void setUserId(UUID userId) {
     this.userId = userId;
   }
@@ -54,5 +50,13 @@ public class Wallet {
 
   public void setBalance(BigDecimal balance) {
     this.balance = balance;
+  }
+
+  public BigDecimal add(BigDecimal amount) {
+    return balance.add(amount);
+  }
+
+  public BigDecimal subtract(BigDecimal amount) {
+    return balance.subtract(amount);
   }
 }
