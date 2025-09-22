@@ -36,7 +36,7 @@ public class Wallet {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  public UUID getWalletId() {
+  public UUID getId() {
     return walletId;
   }
 

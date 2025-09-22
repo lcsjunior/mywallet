@@ -9,6 +9,6 @@ public class GetWalletMapper {
   }
 
   public static GetWalletResponse toResponse(Wallet wallet) {
-    return new GetWalletResponse(wallet.getWalletId(), wallet.getBalance());
+    return new GetWalletResponse(wallet.getId(), wallet.getBalance());
   }
 }

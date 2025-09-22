@@ -3,6 +3,8 @@ package com.example.mywallet.exception;
 import com.example.mywallet.dto.ApiErrorResponse;
 import com.example.mywallet.dto.FieldErrorDetail;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +17,8 @@ import static com.example.mywallet.exception.ErrorMessages.VALIDATION_ERROR;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+  private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
   @ExceptionHandler(ApiException.class)
   public ResponseEntity<ApiErrorResponse> handleNotFound(
@@ -52,11 +56,12 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(VALIDATION_ERROR.getStatus()).body(response);
   }
 
-  @ExceptionHandler(RuntimeException.class)
+  @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiErrorResponse> handleGeneric(
       Exception ex,
       HttpServletRequest request) {
 
+    log.error("Unhandled exception at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
     var response = new ApiErrorResponse(
         GENERIC_ERROR.name(),
         GENERIC_ERROR.formatMessage(),

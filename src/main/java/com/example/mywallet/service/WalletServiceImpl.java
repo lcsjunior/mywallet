@@ -37,6 +37,7 @@ public class WalletServiceImpl implements WalletService {
     var wallet = new Wallet();
     wallet.setUserId(createWalletRequest.userId());
     walletRepository.save(wallet);
+    log.info("Wallet created. userId={}, walletId={}", createWalletRequest.userId(), wallet.getId());
     return CreateWalletMapper.toResponse(wallet);
   }
 
@@ -53,6 +54,8 @@ public class WalletServiceImpl implements WalletService {
     var currentBalance = wallet.getBalance();
     wallet.setBalance(currentBalance.add(amount));
     walletRepository.save(wallet);
+    log.info("Deposit successful. walletId={}, amount={}, previousBalance={}, newBalance={}",
+        walletId, amount, currentBalance, wallet.getBalance());
   }
 
   @Override
@@ -61,10 +64,13 @@ public class WalletServiceImpl implements WalletService {
     var amount = withdrawRequest.amount();
     var currentBalance = wallet.getBalance();
     if (currentBalance.compareTo(amount) < 0) {
+      log.warn("Withdraw failed: insufficient funds. walletId={}, amount={}, balance={}", walletId, amount, currentBalance);
       throw new ApiException(INSUFFICIENT_FUNDS);
     }
     wallet.setBalance(currentBalance.subtract(amount));
     walletRepository.save(wallet);
+    log.info("Withdraw successful. walletId={}, amount={}, previousBalance={}, newBalance={}",
+        walletId, amount, currentBalance, wallet.getBalance());
   }
 
   private Wallet retrieveWallet(UUID walletId) {
