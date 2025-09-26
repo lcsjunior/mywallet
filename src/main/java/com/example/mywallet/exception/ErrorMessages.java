@@ -12,6 +12,7 @@ public enum ErrorMessages {
   GENERIC_ERROR("An unexpected error occurred", INTERNAL_SERVER_ERROR),
   VALIDATION_ERROR("Validation error", BAD_REQUEST),
   WALLET_NOT_FOUND("Wallet not found", NOT_FOUND),
+  WALLET_ALREADY_EXISTS("Wallet already exists", UNPROCESSABLE_ENTITY),
   INSUFFICIENT_FUNDS("Insufficient funds", UNPROCESSABLE_ENTITY);
 
   private final String message;

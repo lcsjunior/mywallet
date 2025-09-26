@@ -1,7 +1,6 @@
 package com.example.mywallet.service;
 
 import com.example.mywallet.dto.CreateWalletRequest;
-import com.example.mywallet.dto.CreateWalletResponse;
 import com.example.mywallet.dto.DepositRequest;
 import com.example.mywallet.dto.GetWalletResponse;
 import com.example.mywallet.dto.WithdrawRequest;
@@ -15,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.example.mywallet.exception.ErrorMessages.INSUFFICIENT_FUNDS;
+import static com.example.mywallet.exception.ErrorMessages.WALLET_ALREADY_EXISTS;
 import static com.example.mywallet.exception.ErrorMessages.WALLET_NOT_FOUND;
 
 @Service
@@ -33,12 +34,12 @@ public class WalletServiceImpl implements WalletService {
 
   @Transactional
   @Override
-  public CreateWalletResponse createWallet(CreateWalletRequest createWalletRequest) {
-    var wallet = new Wallet();
-    wallet.setUserId(createWalletRequest.userId());
-    walletRepository.save(wallet);
-    log.info("Wallet created. userId={}, walletId={}", createWalletRequest.userId(), wallet.getId());
-    return CreateWalletMapper.toResponse(wallet);
+  public GetWalletResponse createWallet(CreateWalletRequest createWalletRequest) {
+    var wallet = CreateWalletMapper.toModel(createWalletRequest);
+    validateWalletNotExists(wallet);
+    walletRepository.saveAndFlush(wallet);
+    log.info("Wallet created. walletId={}, userId={}, type={}", wallet.getId(), wallet.getUserId(), wallet.getType());
+    return GetWalletMapper.toResponse(wallet);
   }
 
   @Override
@@ -53,7 +54,7 @@ public class WalletServiceImpl implements WalletService {
     var wallet = retrieveWallet(walletId);
     var amount = depositRequest.amount();
     var currentBalance = wallet.getBalance();
-    wallet.add(amount);
+    wallet.setBalance(currentBalance.add(amount));
     walletRepository.save(wallet);
     log.info("Deposit successful. walletId={}, amount={}, previousBalance={}, newBalance={}",
         walletId, amount, currentBalance, wallet.getBalance());
@@ -65,11 +66,8 @@ public class WalletServiceImpl implements WalletService {
     var wallet = retrieveWallet(walletId);
     var amount = withdrawRequest.amount();
     var currentBalance = wallet.getBalance();
-    if (currentBalance.compareTo(amount) < 0) {
-      log.warn("Withdraw failed: insufficient funds. walletId={}, amount={}, balance={}", walletId, amount, currentBalance);
-      throw new ApiException(INSUFFICIENT_FUNDS);
-    }
-    wallet.subtract(amount);
+    validateSufficientFunds(wallet, amount);
+    wallet.setBalance(currentBalance.subtract(amount));
     walletRepository.save(wallet);
     log.info("Withdraw successful. walletId={}, amount={}, previousBalance={}, newBalance={}",
         walletId, amount, currentBalance, wallet.getBalance());
@@ -81,5 +79,23 @@ public class WalletServiceImpl implements WalletService {
           log.warn("Wallet not found for id={}", walletId);
           return new ApiException(WALLET_NOT_FOUND);
         });
+  }
+
+  private void validateWalletNotExists(Wallet wallet) {
+    var wallets = walletRepository.findAllByUserId(wallet.getUserId());
+    boolean walletExists = wallets.stream()
+        .anyMatch(w -> w.getType() == wallet.getType());
+    if (walletExists) {
+      log.warn("Uniqueness constraint violation. userId={}, type={}", wallet.getUserId(), wallet.getType());
+      throw new ApiException(WALLET_ALREADY_EXISTS);
+    }
+  }
+
+  private void validateSufficientFunds(Wallet wallet, BigDecimal amount) {
+    var currentBalance = wallet.getBalance();
+    if (currentBalance.compareTo(amount) < 0) {
+      log.warn("Insufficient funds. walletId={}, amount={}, balance={}", wallet.getId(), amount, currentBalance);
+      throw new ApiException(INSUFFICIENT_FUNDS);
+    }
   }
 }

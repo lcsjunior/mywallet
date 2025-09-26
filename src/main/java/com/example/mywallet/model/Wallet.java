@@ -2,8 +2,12 @@ package com.example.mywallet.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -13,6 +17,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
+@Table(
+    name = "wallet",
+    indexes = {
+        @Index(name = "idx_user_id", columnList = "userId")
+    }
+)
 public class Wallet {
 
   @Id
@@ -20,10 +30,15 @@ public class Wallet {
   private UUID walletId;
 
   @Column(nullable = false)
-  private UUID userId;
+  private BigDecimal balance = BigDecimal.ZERO;
 
   @Column(nullable = false)
-  private BigDecimal balance = BigDecimal.ZERO;
+  private UUID userId;
+
+  private String displayName;
+
+  @Enumerated(EnumType.STRING)
+  private WalletType type;
 
   @Version
   private Long version;
@@ -40,10 +55,6 @@ public class Wallet {
     return walletId;
   }
 
-  public void setUserId(UUID userId) {
-    this.userId = userId;
-  }
-
   public BigDecimal getBalance() {
     return balance;
   }
@@ -52,11 +63,35 @@ public class Wallet {
     this.balance = balance;
   }
 
-  public BigDecimal add(BigDecimal amount) {
-    return balance.add(amount);
+  public UUID getUserId() {
+    return userId;
   }
 
-  public BigDecimal subtract(BigDecimal amount) {
-    return balance.subtract(amount);
+  public void setUserId(UUID userId) {
+    this.userId = userId;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public WalletType getType() {
+    return type;
+  }
+
+  public void setType(WalletType type) {
+    this.type = type;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public Instant getUpdatedAt() {
+    return updatedAt;
   }
 }

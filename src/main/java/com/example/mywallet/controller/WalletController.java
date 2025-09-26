@@ -1,7 +1,6 @@
 package com.example.mywallet.controller;
 
 import com.example.mywallet.dto.CreateWalletRequest;
-import com.example.mywallet.dto.CreateWalletResponse;
 import com.example.mywallet.dto.DepositRequest;
 import com.example.mywallet.dto.WithdrawRequest;
 import com.example.mywallet.dto.GetWalletResponse;
@@ -29,7 +28,7 @@ public class WalletController {
   }
 
   @PostMapping
-  public ResponseEntity<CreateWalletResponse> createWallet(
+  public ResponseEntity<GetWalletResponse> createWallet(
       @Valid @RequestBody CreateWalletRequest createWalletRequest,
       UriComponentsBuilder uriBuilder) {
 
