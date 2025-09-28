@@ -1,6 +1,6 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM bellsoft/liberica-runtime-container:jdk-17-slim-glibc
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]
