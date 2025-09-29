@@ -76,7 +76,7 @@ public class WalletServiceImpl implements WalletService {
     return walletRepository.findById(walletId)
         .orElseThrow(() -> {
           log.warn("Wallet not found for id={}", walletId);
-          throw new ResponseStatusException(NOT_FOUND, "wallet.not.found");
+          return new ResponseStatusException(NOT_FOUND, "wallet.not.found");
         });
   }
 
