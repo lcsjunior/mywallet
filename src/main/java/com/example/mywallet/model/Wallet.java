@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -33,6 +34,7 @@ public class Wallet {
   @Column(nullable = false)
   private UUID userId;
 
+  @Size(min = 3, max = 50, message = "Display name must be between 3 and 50 characters")
   private String displayName;
 
   @Version

@@ -4,6 +4,8 @@ import com.example.mywallet.dto.CreateWalletRequest;
 import com.example.mywallet.dto.DepositRequest;
 import com.example.mywallet.dto.GetWalletResponse;
 import com.example.mywallet.dto.WithdrawRequest;
+import com.example.mywallet.exception.BusinessException;
+import com.example.mywallet.exception.NotFoundException;
 import com.example.mywallet.mapper.CreateWalletMapper;
 import com.example.mywallet.mapper.GetWalletMapper;
 import com.example.mywallet.model.Wallet;
@@ -12,18 +14,16 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Service
 public class WalletServiceImpl implements WalletService {
 
   private static final Logger log = LoggerFactory.getLogger(WalletServiceImpl.class);
+
+  private static final String LOG_PREFIX = "[WALLET_SERVICE] ";
 
   private final WalletRepository walletRepository;
 
@@ -37,7 +37,7 @@ public class WalletServiceImpl implements WalletService {
     var newWallet = CreateWalletMapper.toModel(createWalletRequest);
     validateWalletNotExists(newWallet);
     walletRepository.saveAndFlush(newWallet);
-    log.info("Wallet created. userId={}, walletId={}", newWallet.getUserId(), newWallet.getId());
+    log.info(LOG_PREFIX + "Wallet created | userId={}, walletId={}", newWallet.getUserId(), newWallet.getId());
     return GetWalletMapper.toResponse(newWallet);
   }
 
@@ -55,7 +55,7 @@ public class WalletServiceImpl implements WalletService {
     var currentBalance = wallet.getBalance();
     wallet.setBalance(currentBalance.add(amount));
     walletRepository.save(wallet);
-    log.info("Deposit successful. walletId={}, amount={}, previousBalance={}, newBalance={}",
+    log.info(LOG_PREFIX + "Deposit successful | walletId={}, amount={}, previousBalance={}, newBalance={}",
         walletId, amount, currentBalance, wallet.getBalance());
   }
 
@@ -68,15 +68,15 @@ public class WalletServiceImpl implements WalletService {
     validateSufficientFunds(wallet, amount);
     wallet.setBalance(currentBalance.subtract(amount));
     walletRepository.save(wallet);
-    log.info("Withdraw successful. walletId={}, amount={}, previousBalance={}, newBalance={}",
+    log.info(LOG_PREFIX + "Withdraw successful | walletId={}, amount={}, previousBalance={}, newBalance={}",
         walletId, amount, currentBalance, wallet.getBalance());
   }
 
   private Wallet retrieveWallet(UUID walletId) {
     return walletRepository.findById(walletId)
         .orElseThrow(() -> {
-          log.warn("Wallet not found for id={}", walletId);
-          return new ResponseStatusException(NOT_FOUND, "wallet.not.found");
+          log.warn(LOG_PREFIX + "Wallet not found | walletId={}", walletId);
+          return new NotFoundException("wallet.not.found");
         });
   }
 
@@ -84,16 +84,16 @@ public class WalletServiceImpl implements WalletService {
     var walletOpt = walletRepository.findByUserId(newWallet.getUserId());
     if (walletOpt.isPresent()) {
       var wallet = walletOpt.get();
-      log.warn("Wallet already exists. userId={}, walletId={}", wallet.getUserId(), wallet.getId());
-      throw new ResponseStatusException(UNPROCESSABLE_ENTITY, "wallet.already.exists");
+      log.warn(LOG_PREFIX + "Wallet already exists | userId={}, walletId={}", wallet.getUserId(), wallet.getId());
+      throw new BusinessException("wallet.already.exists");
     }
   }
 
   private void validateSufficientFunds(Wallet wallet, BigDecimal amount) {
     var currentBalance = wallet.getBalance();
     if (currentBalance.compareTo(amount) < 0) {
-      log.warn("Insufficient funds. walletId={}, amount={}, balance={}", wallet.getId(), amount, currentBalance);
-      throw new ResponseStatusException(UNPROCESSABLE_ENTITY, "insufficient.funds");
+      log.warn(LOG_PREFIX + "Insufficient funds | walletId={}, amount={}, balance={}", wallet.getId(), amount, currentBalance);
+      throw new BusinessException("wallet.insufficient.funds");
     }
   }
 }

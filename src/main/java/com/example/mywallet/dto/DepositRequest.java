@@ -7,9 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record DepositRequest(
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than or equal to 0.01")
-    @Digits(integer = 20, fraction = 2, message = "Amount must have at most 2 decimal places")
+    @NotNull(message = "{validation.amount.required}")
+    @DecimalMin(value = "0.01", message = "{validation.amount.min}")
+    @Digits(integer = 20, fraction = 2, message = "{validation.amount.decimal.places}")
     BigDecimal amount
 ) {
 }
