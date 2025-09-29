@@ -36,7 +36,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     problemDetail.setDetail(messageResolver.resolve(
         requireNonNullElse(ex.getReason(), "generic.error")));
     problemDetail.setProperty(PROPERTY_TIMESTAMP, Instant.now());
-
     return problemDetail;
   }
 
