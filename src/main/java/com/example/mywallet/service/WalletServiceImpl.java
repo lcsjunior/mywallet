@@ -4,7 +4,6 @@ import com.example.mywallet.dto.CreateWalletRequest;
 import com.example.mywallet.dto.DepositRequest;
 import com.example.mywallet.dto.GetWalletResponse;
 import com.example.mywallet.dto.WithdrawRequest;
-import com.example.mywallet.exception.ApiException;
 import com.example.mywallet.mapper.CreateWalletMapper;
 import com.example.mywallet.mapper.GetWalletMapper;
 import com.example.mywallet.model.Wallet;
@@ -13,13 +12,13 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static com.example.mywallet.exception.ErrorMessages.INSUFFICIENT_FUNDS;
-import static com.example.mywallet.exception.ErrorMessages.WALLET_ALREADY_EXISTS;
-import static com.example.mywallet.exception.ErrorMessages.WALLET_NOT_FOUND;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -35,11 +34,11 @@ public class WalletServiceImpl implements WalletService {
   @Transactional
   @Override
   public GetWalletResponse createWallet(CreateWalletRequest createWalletRequest) {
-    var wallet = CreateWalletMapper.toModel(createWalletRequest);
-    validateWalletNotExists(wallet);
-    walletRepository.saveAndFlush(wallet);
-    log.info("Wallet created. walletId={}, userId={}, type={}", wallet.getId(), wallet.getUserId(), wallet.getType());
-    return GetWalletMapper.toResponse(wallet);
+    var newWallet = CreateWalletMapper.toModel(createWalletRequest);
+    validateWalletNotExists(newWallet);
+    walletRepository.saveAndFlush(newWallet);
+    log.info("Wallet created. userId={}, walletId={}", newWallet.getUserId(), newWallet.getId());
+    return GetWalletMapper.toResponse(newWallet);
   }
 
   @Override
@@ -77,17 +76,16 @@ public class WalletServiceImpl implements WalletService {
     return walletRepository.findById(walletId)
         .orElseThrow(() -> {
           log.warn("Wallet not found for id={}", walletId);
-          return new ApiException(WALLET_NOT_FOUND);
+          throw new ResponseStatusException(NOT_FOUND, "wallet.not.found");
         });
   }
 
-  private void validateWalletNotExists(Wallet wallet) {
-    var wallets = walletRepository.findAllByUserId(wallet.getUserId());
-    boolean walletExists = wallets.stream()
-        .anyMatch(w -> w.getType() == wallet.getType());
-    if (walletExists) {
-      log.warn("Uniqueness constraint violation. userId={}, type={}", wallet.getUserId(), wallet.getType());
-      throw new ApiException(WALLET_ALREADY_EXISTS);
+  private void validateWalletNotExists(Wallet newWallet) {
+    var walletOpt = walletRepository.findByUserId(newWallet.getUserId());
+    if (walletOpt.isPresent()) {
+      var wallet = walletOpt.get();
+      log.warn("Wallet already exists. userId={}, walletId={}", wallet.getUserId(), wallet.getId());
+      throw new ResponseStatusException(UNPROCESSABLE_ENTITY, "wallet.already.exists");
     }
   }
 
@@ -95,7 +93,7 @@ public class WalletServiceImpl implements WalletService {
     var currentBalance = wallet.getBalance();
     if (currentBalance.compareTo(amount) < 0) {
       log.warn("Insufficient funds. walletId={}, amount={}, balance={}", wallet.getId(), amount, currentBalance);
-      throw new ApiException(INSUFFICIENT_FUNDS);
+      throw new ResponseStatusException(UNPROCESSABLE_ENTITY, "insufficient.funds");
     }
   }
 }

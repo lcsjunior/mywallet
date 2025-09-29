@@ -12,7 +12,6 @@ public class CreateWalletMapper {
     var wallet = new Wallet();
     wallet.setUserId(createWalletRequest.userId());
     wallet.setDisplayName(createWalletRequest.displayName());
-    wallet.setType(createWalletRequest.type());
     return wallet;
   }
 }

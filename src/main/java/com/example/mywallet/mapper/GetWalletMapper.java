@@ -13,7 +13,6 @@ public class GetWalletMapper {
         wallet.getId(),
         wallet.getBalance(),
         wallet.getDisplayName(),
-        wallet.getType(),
         wallet.getCreatedAt(),
         wallet.getUpdatedAt());
   }

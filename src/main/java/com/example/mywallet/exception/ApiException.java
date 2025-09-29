@@ -1,24 +1,11 @@
 package com.example.mywallet.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-public class ApiException extends RuntimeException {
-  private final ErrorMessages error;
+public class ApiException extends ResponseStatusException {
 
-  public ApiException(ErrorMessages error, String message) {
-    super(message);
-    this.error = error;
-  }
-
-  public ApiException(ErrorMessages error) {
-    this(error, error.formatMessage());
-  }
-
-  public ErrorMessages getError() {
-    return error;
-  }
-
-  public HttpStatus getStatus() {
-    return error.getStatus();
+  public ApiException(HttpStatus status, String reason) {
+    super(status, reason);
   }
 }

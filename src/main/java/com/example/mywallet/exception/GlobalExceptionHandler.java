@@ -1,75 +1,54 @@
 package com.example.mywallet.exception;
 
-import com.example.mywallet.dto.ApiErrorResponse;
-import com.example.mywallet.dto.FieldErrorDetail;
-import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.Instant;
+import java.util.List;
 
-import static com.example.mywallet.exception.ErrorMessages.GENERIC_ERROR;
-import static com.example.mywallet.exception.ErrorMessages.VALIDATION_ERROR;
+import static com.example.mywallet.util.MessageUtils.getMessage;
+import static java.util.Objects.requireNonNullElse;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+  private static final String PROPERTY_ERRORS = "errors";
+  private static final String PROPERTY_TIMESTAMP = "timestamp";
 
-  @ExceptionHandler(ApiException.class)
-  public ResponseEntity<ApiErrorResponse> handleNotFound(
-      ApiException ex,
-      HttpServletRequest request) {
+  @ExceptionHandler(ResponseStatusException.class)
+  public ProblemDetail handleResponseStatus(ResponseStatusException ex) {
+    ProblemDetail problemDetail = ProblemDetail.forStatus(ex.getStatusCode());
+    problemDetail.setTitle(getMessage("business.error.title"));
+    problemDetail.setDetail(getMessage(requireNonNullElse(ex.getReason(), "generic.error")));
+    problemDetail.setProperty(PROPERTY_TIMESTAMP, Instant.now());
 
-    var response = new ApiErrorResponse(
-        ex.getError().name(),
-        ex.getMessage(),
-        ex.getStatus().value(),
-        request.getRequestURI(),
-        Instant.now(),
-        null
-    );
-    return ResponseEntity.status(ex.getStatus()).body(response);
+    return problemDetail;
   }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ApiErrorResponse> handleValidationErrors(
+  @Override
+  protected ResponseEntity<Object> handleMethodArgumentNotValid(
       MethodArgumentNotValidException ex,
-      HttpServletRequest request) {
-
-    var details = ex.getBindingResult().getFieldErrors()
+      HttpHeaders headers,
+      HttpStatusCode status,
+      WebRequest request
+  ) {
+    ProblemDetail problemDetail = ex.getBody();
+    problemDetail.setTitle(getMessage("validation.error.title"));
+    problemDetail.setDetail(getMessage("validation.error"));
+    List<String> fieldErrors = ex.getBindingResult().getFieldErrors()
         .stream()
-        .map(err -> new FieldErrorDetail(err.getField(), err.getDefaultMessage()))
+        .map(err -> err.getField() + ": " + err.getDefaultMessage())
         .toList();
-    var response = new ApiErrorResponse(
-        VALIDATION_ERROR.name(),
-        VALIDATION_ERROR.formatMessage(),
-        VALIDATION_ERROR.getStatus().value(),
-        request.getRequestURI(),
-        Instant.now(),
-        details
-    );
-    return ResponseEntity.status(VALIDATION_ERROR.getStatus()).body(response);
-  }
-
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ApiErrorResponse> handleGeneric(
-      Exception ex,
-      HttpServletRequest request) {
-
-    log.error("Unhandled exception at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
-    var response = new ApiErrorResponse(
-        GENERIC_ERROR.name(),
-        GENERIC_ERROR.formatMessage(),
-        GENERIC_ERROR.getStatus().value(),
-        request.getRequestURI(),
-        Instant.now(),
-        null
-    );
-    return ResponseEntity.status(GENERIC_ERROR.getStatus()).body(response);
+    problemDetail.setProperty(PROPERTY_ERRORS, fieldErrors);
+    problemDetail.setProperty(PROPERTY_TIMESTAMP, Instant.now());
+    return ResponseEntity.status(problemDetail.getStatus()).body(problemDetail);
   }
 }

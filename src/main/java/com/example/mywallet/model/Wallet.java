@@ -2,8 +2,6 @@ package com.example.mywallet.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
@@ -36,9 +34,6 @@ public class Wallet {
   private UUID userId;
 
   private String displayName;
-
-  @Enumerated(EnumType.STRING)
-  private WalletType type;
 
   @Version
   private Long version;
@@ -77,14 +72,6 @@ public class Wallet {
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
-  }
-
-  public WalletType getType() {
-    return type;
-  }
-
-  public void setType(WalletType type) {
-    this.type = type;
   }
 
   public Instant getCreatedAt() {
